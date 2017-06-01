@@ -1,0 +1,41 @@
+#JSGF V1.0;
+
+grammar com.thumbjive.hellovoice.commands;
+
+<time_number> = one  |
+          two   |
+          three |
+          four  |
+          five  |
+          ten   |
+          fifteen |
+          twenty |
+          thirty |
+          forty |
+          fifty ;
+
+<time> = <time_number> (seconds | minute | minutes);
+
+<digit> = oh    |
+          zero  |
+          one   |
+          two   |
+          three |
+          four  |
+          five  |
+          six   |
+          seven |
+          eight |
+          nine  ;
+
+<digits> = <digit>+;
+
+
+public <item> = play | stop |
+                faster | slower |
+                [go] forward <time> | go back <time> |
+                start session <digits> |
+                end session <digit> |
+                start feedback |
+                end feedback |
+                help | cancel | exit | quit ;

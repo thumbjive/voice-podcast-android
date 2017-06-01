@@ -215,6 +215,8 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
         transaction.commit();
 
         checkFirstLaunch();
+
+        runRecognizerSetup();
     }
 
     private void saveLastNavFragment(String tag) {
@@ -803,6 +805,11 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
         setIntent(intent);
     }
 
+
+    //
+    // Experimental voice integration
+    //
+
     private SpeechRecognizer recognizer;
     private static final String KWS_SEARCH = "wakeup";
     private String currentSearch = KWS_SEARCH;
@@ -810,18 +817,21 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
     private static final String COMMANDS_SEARCH = "commands";
 
 
-
     private void runRecognizerSetup() {
+        Log.i("TJ", "runRecognizerSetup");
         // Recognizer initialization is a time-consuming and it involves IO,
         // so we execute it in async task
         new AsyncTask<Void, Void, Exception>() {
             @Override
             protected Exception doInBackground(Void... params) {
                 try {
+                    Log.i("TJ", "about to load assets");
                     Assets assets = new Assets(MainActivity.this);
                     File assetDir = assets.syncAssets();
+                    Log.i("TJ", "after syncAssets");
                     setupRecognizer(assetDir);
                 } catch (IOException e) {
+                    Log.i("TJ", "asset load error: " + e);
                     return e;
                 }
                 return null;
@@ -829,6 +839,7 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 
             @Override
             protected void onPostExecute(Exception result) {
+                showToast("speech recognizer initialized");
                 if (result != null) {
 //                    ((TextView) findViewById(R.id.caption_text))
 //                            .setText("Failed to init recognizer " + result);
@@ -875,6 +886,7 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
                 .setRawLogDir(assetsDir) // To disable logging of raw audio comment out this call (takes a lot of space on the device)
 
                 .getRecognizer();
+        Log.i("TJ", "recognizer instantiated");
         recognizer.addListener(this);
 
         // Create keyword-activation search.
@@ -883,6 +895,7 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
         // Hello Voice POC commands
         File commandsGrammar = new File(assetsDir, "commands.gram");
         recognizer.addGrammarSearch(COMMANDS_SEARCH, commandsGrammar);
+        Log.i("TJ", "grammer added");
     }
 
 
@@ -898,6 +911,7 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 
         String text = hypothesis.getHypstr();
         Log.i("TJ", "hypothesis: " + text);
+        showToast("onPartial: " + text);
 //        ((TextView) findViewById(R.id.result_text)).setText(text);
     }
 
@@ -910,6 +924,7 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
         if (hypothesis != null) {
             String text = hypothesis.getHypstr();
             Log.i("TJ", "onResult: " + text);
+            showToast("onResult: " + text);
 //            if (text.equals(KEYPHRASE)) {
 //                switchSearch(COMMANDS_SEARCH);
 //                resetState();
@@ -963,6 +978,7 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 
     @Override
     public void onError(Exception error) {
+        Log.e("TJ", "onError: " + error.getMessage());
 //        ((TextView) findViewById(R.id.caption_text)).setText(error.getMessage());
         showToast(error.getMessage());
     }

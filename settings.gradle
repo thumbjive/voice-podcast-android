@@ -1,2 +1,2 @@
-include ':app', ':aars'
+include ':app', ':aars', ':models'
 include ':core'

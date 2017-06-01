@@ -123,6 +123,7 @@ configurations {
 
 dependencies {
     compile project(':aars')
+    compile project(':models')
     freeDebugCompile project(path: ":core", configuration: "freeDebug")
     freeReleaseCompile project(path: ":core", configuration: "freeRelease")
     // free build hack: skip some dependencies
