@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,12 +28,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import de.danoeh.antennapod.R;
@@ -71,10 +76,19 @@ import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
+import edu.cmu.pocketsphinx.Assets;
+import edu.cmu.pocketsphinx.Hypothesis;
+import edu.cmu.pocketsphinx.RecognitionListener;
+import edu.cmu.pocketsphinx.SpeechRecognizer;
+import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
+
+import static android.widget.Toast.makeText;
+
 /**
  * The activity that is shown when the user launches the app.
  */
-public class MainActivity extends CastEnabledActivity implements NavDrawerActivity {
+public class MainActivity extends CastEnabledActivity implements NavDrawerActivity,
+        RecognitionListener {
 
     private static final String TAG = "MainActivity";
 
@@ -787,5 +801,174 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+    }
+
+    private SpeechRecognizer recognizer;
+    private static final String KWS_SEARCH = "wakeup";
+    private String currentSearch = KWS_SEARCH;
+    private static final String KEYPHRASE = "hello voice";
+    private static final String COMMANDS_SEARCH = "commands";
+
+
+
+    private void runRecognizerSetup() {
+        // Recognizer initialization is a time-consuming and it involves IO,
+        // so we execute it in async task
+        new AsyncTask<Void, Void, Exception>() {
+            @Override
+            protected Exception doInBackground(Void... params) {
+                try {
+                    Assets assets = new Assets(MainActivity.this);
+                    File assetDir = assets.syncAssets();
+                    setupRecognizer(assetDir);
+                } catch (IOException e) {
+                    return e;
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Exception result) {
+                if (result != null) {
+//                    ((TextView) findViewById(R.id.caption_text))
+//                            .setText("Failed to init recognizer " + result);
+                } else {
+                    switchSearch(KWS_SEARCH);
+                }
+            }
+        }.execute();
+    }
+
+    private void switchSearch(String searchName) {
+        Log.i("TJ", "switchSearch: " + searchName);
+//        currentSearch = searchName;
+
+//        String caption = getResources().getString(captions.get(currentSearch));
+//        ((TextView) findViewById(R.id.caption_text)).setText(caption);
+//
+//        if (currentSearch.equals(COMMANDS_SEARCH)) {
+//            resetState();
+//        }
+
+        restartRecognizer();
+    }
+
+    private void restartRecognizer() {
+        Log.i("TJ", "restartRecognizer, currentSearch: " + currentSearch);
+        recognizer.stop();
+
+        // If we are not spotting, start listening with timeout (10000 ms or 10 seconds).
+        if (currentSearch.equals(KWS_SEARCH))
+            recognizer.startListening(currentSearch);
+        else
+            recognizer.startListening(currentSearch, 30000);
+    }
+
+    private void setupRecognizer(File assetsDir) throws IOException {
+        // The recognizer can be configured to perform multiple searches
+        // of different kind and switch between them
+
+        recognizer = SpeechRecognizerSetup.defaultSetup()
+                .setAcousticModel(new File(assetsDir, "en-us-ptm"))
+                .setDictionary(new File(assetsDir, "cmudict-en-us.dict"))
+
+                .setRawLogDir(assetsDir) // To disable logging of raw audio comment out this call (takes a lot of space on the device)
+
+                .getRecognizer();
+        recognizer.addListener(this);
+
+        // Create keyword-activation search.
+        recognizer.addKeyphraseSearch(KWS_SEARCH, KEYPHRASE);
+
+        // Hello Voice POC commands
+        File commandsGrammar = new File(assetsDir, "commands.gram");
+        recognizer.addGrammarSearch(COMMANDS_SEARCH, commandsGrammar);
+    }
+
+
+    /**
+     * In partial result we get quick updates about current hypothesis. In
+     * keyword spotting mode we can react here, in other modes we need to wait
+     * for final result in onResult.
+     */
+    @Override
+    public void onPartialResult(Hypothesis hypothesis) {
+        if (hypothesis == null)
+            return;
+
+        String text = hypothesis.getHypstr();
+        Log.i("TJ", "hypothesis: " + text);
+//        ((TextView) findViewById(R.id.result_text)).setText(text);
+    }
+
+    /**
+     * This callback is called when we stop the recognizer.
+     */
+    @Override
+    public void onResult(Hypothesis hypothesis) {
+//        ((TextView) findViewById(R.id.result_text)).setText("");
+        if (hypothesis != null) {
+            String text = hypothesis.getHypstr();
+            Log.i("TJ", "onResult: " + text);
+//            if (text.equals(KEYPHRASE)) {
+//                switchSearch(COMMANDS_SEARCH);
+//                resetState();
+//            }
+//
+//            if ("exit".equals(text) || "quit".equals(text)) {
+//                showToast("exiting");
+//                switchSearch(KWS_SEARCH);
+//            } if ("cancel".equals(text)) {
+//                showToast("resetting state");
+//                resetState();
+//            } else if ("play".equals(text)) {
+//                handlePlayCommand();
+//            } else if ("stop".equals(text)) {
+//                handleStopCommand();
+//            } else if (text.startsWith("go ")) {
+//                handleGoCommand(text);
+//            } else if (text.equals("faster") || text.equals("slower")) {
+//                handleSpeedCommand(text);
+//            } else if (text.contains("session")) {
+//                handleSessionCommand(text);
+//            } else if (text.contains("feedback")) {
+//                handleFeedbackCommand(text);
+//            } else  if (text.equals("help")) {
+//                showToast("don't forget your towel");
+//            } else {
+//                showToast(text);
+//            }
+        }
+//        displayState();
+    }
+
+    @Override
+    public void onBeginningOfSpeech() {
+    }
+
+    /**
+     * We stop recognizer here to get a final result
+     */
+    @Override
+    public void onEndOfSpeech() {
+        Log.i("TJ", "onEndOfSpeech");
+        restartRecognizer();
+    }
+
+    private void showToast(String text) {
+        if (text != null && text.length() > 0) {
+            makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onError(Exception error) {
+//        ((TextView) findViewById(R.id.caption_text)).setText(error.getMessage());
+        showToast(error.getMessage());
+    }
+
+    @Override
+    public void onTimeout() {
+        switchSearch(KWS_SEARCH);
     }
 }

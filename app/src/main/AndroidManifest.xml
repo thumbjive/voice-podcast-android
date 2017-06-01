@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.danoeh.antennapod"
     android:versionCode="1060397"
-    android:versionName="1.6.3.0">
+    android:versionName="1.6.3.0"
+    xmlns:tools="http://schemas.android.com/tools">
     <!--
       Version code schema:
       "1.2.3-SNAPSHOT" -> 1020300
@@ -12,6 +13,9 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <uses-sdk tools:overrideLibrary="edu.cmu.pocketsphinx"/>
 
     <supports-screens
         android:anyDensity="true"
