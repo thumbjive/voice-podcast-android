@@ -219,6 +219,9 @@ public class PlaybackService extends MediaBrowserServiceCompat {
         }
     }
 
+    // Hacked singleton access until I figure out a better approach
+    public static PlaybackService instance;
+
     @Override
     public boolean onUnbind(Intent intent) {
         Log.d(TAG, "Received onUnbind event");
@@ -256,6 +259,7 @@ public class PlaybackService extends MediaBrowserServiceCompat {
         super.onCreate();
         Log.d(TAG, "Service created.");
         isRunning = true;
+        instance = this;
 
         registerReceiver(autoStateUpdated, new IntentFilter(
                 "com.google.android.gms.car.media.STATUS"));

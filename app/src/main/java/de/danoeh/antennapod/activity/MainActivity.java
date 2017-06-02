@@ -58,6 +58,7 @@ import de.danoeh.antennapod.core.storage.DBWriter;
 import de.danoeh.antennapod.core.util.FeedItemUtil;
 import de.danoeh.antennapod.core.util.Flavors;
 import de.danoeh.antennapod.core.util.StorageUtils;
+import de.danoeh.antennapod.core.util.playback.PlaybackController;
 import de.danoeh.antennapod.dialog.RatingDialog;
 import de.danoeh.antennapod.dialog.RenameFeedDialog;
 import de.danoeh.antennapod.fragment.AddFeedFragment;
@@ -812,7 +813,7 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 
     private SpeechRecognizer recognizer;
     private static final String KWS_SEARCH = "wakeup";
-    private String currentSearch = KWS_SEARCH;
+    private String currentSearch = COMMANDS_SEARCH;
     private static final String KEYPHRASE = "hello voice";
     private static final String COMMANDS_SEARCH = "commands";
 
@@ -844,7 +845,8 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 //                    ((TextView) findViewById(R.id.caption_text))
 //                            .setText("Failed to init recognizer " + result);
                 } else {
-                    switchSearch(KWS_SEARCH);
+//                    switchSearch(KWS_SEARCH);
+                    switchSearch(COMMANDS_SEARCH);
                 }
             }
         }.execute();
@@ -936,10 +938,11 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 //            } if ("cancel".equals(text)) {
 //                showToast("resetting state");
 //                resetState();
-//            } else if ("play".equals(text)) {
-//                handlePlayCommand();
-//            } else if ("stop".equals(text)) {
-//                handleStopCommand();
+            if ("play".equals(text)) {
+                handlePlayCommand();
+            } else if ("stop".equals(text)) {
+                handleStopCommand();
+            }
 //            } else if (text.startsWith("go ")) {
 //                handleGoCommand(text);
 //            } else if (text.equals("faster") || text.equals("slower")) {
@@ -956,6 +959,18 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
         }
 //        displayState();
     }
+
+    private void handlePlayCommand() {
+        showToast("playing");
+        getPlaybackController().playPause();
+    }
+
+    private void handleStopCommand() {
+        showToast("pausing");
+        getPlaybackController().playPause();
+    }
+
+
 
     @Override
     public void onBeginningOfSpeech() {
@@ -987,4 +1002,11 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
     public void onTimeout() {
         switchSearch(KWS_SEARCH);
     }
+
+
+    public PlaybackController getPlaybackController() {
+        ExternalPlayerFragment fragment = (ExternalPlayerFragment) getSupportFragmentManager().findFragmentByTag(ExternalPlayerFragment.TAG);
+        return fragment.getPlaybackControllerTestingOnly();
+    }
+
 }

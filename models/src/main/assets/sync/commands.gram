@@ -31,11 +31,13 @@ grammar com.thumbjive.hellovoice.commands;
 <digits> = <digit>+;
 
 
-public <item> = play | stop |
-                faster | slower |
-                [go] forward <time> | go back <time> |
-                start session <digits> |
-                end session <digit> |
-                start feedback |
-                end feedback |
-                help | cancel | exit | quit ;
+//public <foo_item> = play | stop |
+//                faster | slower |
+//                [go] forward <time> | go back <time> |
+//                start session <digits> |
+//                end session <digit> |
+//                start feedback |
+//                end feedback |
+//                help | cancel | exit | quit ;
+
+public <item> = play | stop ;
