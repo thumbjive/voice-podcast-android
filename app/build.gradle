@@ -75,8 +75,8 @@ android {
             buildConfigField STRING, FLATTR_APP_SECRET, mFlattrAppSecret
         }
         release {
-            minifyEnabled true
-            proguardFile "proguard.cfg"
+//            minifyEnabled true
+//            proguardFile "proguard.cfg"
             signingConfig signingConfigs.releaseConfig
             buildConfigField STRING, FLATTR_APP_KEY, mFlattrAppKey
             buildConfigField STRING, FLATTR_APP_SECRET, mFlattrAppSecret
