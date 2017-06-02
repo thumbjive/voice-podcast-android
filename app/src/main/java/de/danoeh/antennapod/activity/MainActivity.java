@@ -1,10 +1,12 @@
 package de.danoeh.antennapod.activity;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
 import android.media.session.PlaybackState;
@@ -13,9 +15,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
@@ -123,6 +127,9 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
             NavListAdapter.SUBSCRIPTION_LIST_TAG
     };
 
+    /* Used to handle permission request */
+    private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
+
     private Toolbar toolbar;
     private ExternalPlayerFragment externalPlayerFragment;
     private DrawerLayout drawerLayout;
@@ -155,6 +162,12 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
             int elevation = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4,
                     getResources().getDisplayMetrics());
             getSupportActionBar().setElevation(elevation);
+        }
+
+        int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO);
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
+            return;
         }
 
         currentTitle = getTitle();
