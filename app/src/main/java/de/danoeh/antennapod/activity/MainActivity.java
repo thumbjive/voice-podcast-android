@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
+import android.media.session.PlaybackState;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -84,6 +85,9 @@ import edu.cmu.pocketsphinx.SpeechRecognizer;
 import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
 
 import static android.widget.Toast.makeText;
+
+import de.danoeh.antennapod.core.service.playback.PlayerStatus;
+
 
 /**
  * The activity that is shown when the user launches the app.
@@ -813,10 +817,11 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 
     private SpeechRecognizer recognizer;
     private static final String KWS_SEARCH = "wakeup";
-    private String currentSearch = COMMANDS_SEARCH;
-    private static final String KEYPHRASE = "hello voice";
+//    private static final String KEYPHRASE = "hello voice";
+    private static final String KEYPHRASE = "wakeup";
     private static final String COMMANDS_SEARCH = "commands";
 
+    private String currentSearch = KWS_SEARCH;
 
     private void runRecognizerSetup() {
         Log.i("TJ", "runRecognizerSetup");
@@ -840,21 +845,29 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 
             @Override
             protected void onPostExecute(Exception result) {
-                showToast("speech recognizer initialized");
+//                showToast("Speech recognizer initialized.\nSay \"" + KEYPHRASE + "\" to wake up");
+                showToast("Speech recognizer initialized");
                 if (result != null) {
 //                    ((TextView) findViewById(R.id.caption_text))
 //                            .setText("Failed to init recognizer " + result);
                 } else {
-//                    switchSearch(KWS_SEARCH);
-                    switchSearch(COMMANDS_SEARCH);
-                }
+                    switchSearch(KWS_SEARCH);
+//                    switchSearch(COMMANDS_SEARCH);
+                 }
             }
         }.execute();
     }
 
     private void switchSearch(String searchName) {
         Log.i("TJ", "switchSearch: " + searchName);
-//        currentSearch = searchName;
+        currentSearch = searchName;
+
+        if (currentSearch.startsWith(KWS_SEARCH)) {
+            showToast("Say \"" + KEYPHRASE + "\" to wake up");
+        } else if (currentSearch.startsWith(COMMANDS_SEARCH)) {
+            showToast("Say \"play\", \"pause\", or \"sleep\"");
+        }
+
 
 //        String caption = getResources().getString(captions.get(currentSearch));
 //        ((TextView) findViewById(R.id.caption_text)).setText(caption);
@@ -913,7 +926,7 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 
         String text = hypothesis.getHypstr();
         Log.i("TJ", "hypothesis: " + text);
-        showToast("onPartial: " + text);
+//        showToast("onPartial: " + text);
 //        ((TextView) findViewById(R.id.result_text)).setText(text);
     }
 
@@ -926,11 +939,11 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
         if (hypothesis != null) {
             String text = hypothesis.getHypstr();
             Log.i("TJ", "onResult: " + text);
-            showToast("onResult: " + text);
-//            if (text.equals(KEYPHRASE)) {
-//                switchSearch(COMMANDS_SEARCH);
+//            showToast("onResult: " + text);
+            if (text.equals(KEYPHRASE)) {
+                switchSearch(COMMANDS_SEARCH);
 //                resetState();
-//            }
+            }
 //
 //            if ("exit".equals(text) || "quit".equals(text)) {
 //                showToast("exiting");
@@ -940,8 +953,10 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 //                resetState();
             if ("play".equals(text)) {
                 handlePlayCommand();
-            } else if ("stop".equals(text)) {
-                handleStopCommand();
+            } else if ("pause".equals(text)) {
+                handlePauseCommand();
+            } else if ("sleep".equals(text)) {
+                switchSearch(KWS_SEARCH);
             }
 //            } else if (text.startsWith("go ")) {
 //                handleGoCommand(text);
@@ -961,16 +976,24 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
     }
 
     private void handlePlayCommand() {
-        showToast("playing");
-        getPlaybackController().playPause();
+        PlayerStatus status = getPlaybackController().getStatus();
+        Log.i("TJ", "handlePlay - status: " + status);
+        if (status != PlayerStatus.PLAYING) {
+            Log.i("TJ", "playing...");
+//            showToast("playing");
+            getPlaybackController().playPause();
+        }
     }
 
-    private void handleStopCommand() {
-        showToast("pausing");
-        getPlaybackController().playPause();
+    private void handlePauseCommand() {
+        PlayerStatus status = getPlaybackController().getStatus();
+        Log.i("TJ", "handlePlay - status: " + status);
+        if (status == PlayerStatus.PLAYING) {
+            Log.i("TJ", "pausing...");
+//            showToast("pausing");
+            getPlaybackController().playPause();
+        }
     }
-
-
 
     @Override
     public void onBeginningOfSpeech() {

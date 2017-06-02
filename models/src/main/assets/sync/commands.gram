@@ -40,4 +40,4 @@ grammar com.thumbjive.hellovoice.commands;
 //                end feedback |
 //                help | cancel | exit | quit ;
 
-public <item> = play | stop ;
+public <item> = play | pause | sleep ;
