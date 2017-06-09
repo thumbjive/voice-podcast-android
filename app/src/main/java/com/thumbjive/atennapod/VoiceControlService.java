@@ -144,7 +144,7 @@ public class VoiceControlService
                 switchSearch(COMMANDS_SEARCH);
             } else if ("play".equals(text)) {
                 handlePlayCommand();
-            } else if ("pause".equals(text)) {
+            } else if ("pause".equals(text) || "stop".equals(text)) {
                 handlePauseCommand();
             } else if ("sleep".equals(text)) {
                 switchSearch(KWS_SEARCH);
