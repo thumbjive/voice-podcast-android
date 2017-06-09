@@ -1,6 +1,6 @@
 #JSGF V1.0;
 
-grammar com.thumbjive.hellovoice.commands;
+grammar com.thumbjive.antennapod;
 
 <time_number> = one  |
           two   |
@@ -30,8 +30,8 @@ grammar com.thumbjive.hellovoice.commands;
 
 <digits> = <digit>+;
 
-
-//public <foo_item> = play | stop |
+// Todo: expand podcast command set to full Voice POC spec
+//public <item> = play | stop |
 //                faster | slower |
 //                [go] forward <time> | go back <time> |
 //                start session <digits> |
