@@ -75,6 +75,7 @@ android {
             buildConfigField STRING, FLATTR_APP_SECRET, mFlattrAppSecret
         }
         release {
+// Proguard seems to bust the speech recognizer setup in inconsistent ways
 //            minifyEnabled true
 //            proguardFile "proguard.cfg"
             signingConfig signingConfigs.releaseConfig
