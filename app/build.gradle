@@ -75,8 +75,9 @@ android {
             buildConfigField STRING, FLATTR_APP_SECRET, mFlattrAppSecret
         }
         release {
-            minifyEnabled true
-            proguardFile "proguard.cfg"
+// Proguard seems to bust the speech recognizer setup in inconsistent ways
+//            minifyEnabled true
+//            proguardFile "proguard.cfg"
             signingConfig signingConfigs.releaseConfig
             buildConfigField STRING, FLATTR_APP_KEY, mFlattrAppKey
             buildConfigField STRING, FLATTR_APP_SECRET, mFlattrAppSecret
@@ -122,6 +123,8 @@ configurations {
 }
 
 dependencies {
+    compile project(':aars')
+    compile project(':models')
     freeDebugCompile project(path: ":core", configuration: "freeDebug")
     freeReleaseCompile project(path: ":core", configuration: "freeRelease")
     // free build hack: skip some dependencies

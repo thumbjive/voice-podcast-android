@@ -1,19 +1,23 @@
 package de.danoeh.antennapod.activity;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
@@ -27,8 +31,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.thumbjive.atennapod.VoiceControlService;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
@@ -53,6 +59,7 @@ import de.danoeh.antennapod.core.storage.DBWriter;
 import de.danoeh.antennapod.core.util.FeedItemUtil;
 import de.danoeh.antennapod.core.util.Flavors;
 import de.danoeh.antennapod.core.util.StorageUtils;
+import de.danoeh.antennapod.core.util.playback.PlaybackController;
 import de.danoeh.antennapod.dialog.RatingDialog;
 import de.danoeh.antennapod.dialog.RenameFeedDialog;
 import de.danoeh.antennapod.fragment.AddFeedFragment;
@@ -70,6 +77,8 @@ import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+
+import static android.widget.Toast.makeText;
 
 /**
  * The activity that is shown when the user launches the app.
@@ -104,6 +113,9 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
             NavListAdapter.SUBSCRIPTION_LIST_TAG
     };
 
+    /* Used to handle permission request */
+    private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
+
     private Toolbar toolbar;
     private ExternalPlayerFragment externalPlayerFragment;
     private DrawerLayout drawerLayout;
@@ -121,6 +133,8 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
 
     private Subscription subscription;
 
+    private VoiceControlService voiceControlService;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         setTheme(UserPreferences.getNoTitleTheme());
@@ -136,6 +150,12 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
             int elevation = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4,
                     getResources().getDisplayMetrics());
             getSupportActionBar().setElevation(elevation);
+        }
+
+        int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO);
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
+            return;
         }
 
         currentTitle = getTitle();
@@ -201,6 +221,9 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
         transaction.commit();
 
         checkFirstLaunch();
+
+        voiceControlService = new VoiceControlService(this);
+        voiceControlService.run();
     }
 
     private void saveLastNavFragment(String tag) {
@@ -787,5 +810,20 @@ public class MainActivity extends CastEnabledActivity implements NavDrawerActivi
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+    }
+
+    //
+    // VoiceControlService support
+    //
+
+    public void showToast(String text) {
+        if (text != null && text.length() > 0) {
+            makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public PlaybackController getPlaybackController() {
+        ExternalPlayerFragment fragment = (ExternalPlayerFragment) getSupportFragmentManager().findFragmentByTag(ExternalPlayerFragment.TAG);
+        return fragment.getPlaybackControllerTestingOnly();
     }
 }
